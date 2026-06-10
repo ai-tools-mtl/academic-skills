@@ -1,0 +1,16 @@
+{
+  "name": "academic-skills",
+  "version": "1.0.0",
+  "description": "Academic skill collection for Claude Code and Codex — Nature-style writing, citation, figures, data, reader, response, search, and scientific computing",
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "codex",
+    "skill",
+    "academic",
+    "nature",
+    "scientific-writing",
+    "citation",
+    "research"
+  ]
+}
