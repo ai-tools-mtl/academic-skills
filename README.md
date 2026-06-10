@@ -1,83 +1,151 @@
 # Academic Skills
 
-面向 Claude Code（及兼容 Agent 框架）的学术技能集合，覆盖论文写作、润色、引文、图表、数据、全文阅读、审稿回复、文献检索和科研计算。
+A collection of academic skills for AI coding agents. Skills are packaged instructions that extend agent capabilities for scientific writing, literature research, figure generation, and scholarly communication.
 
-## 安装
+Skills follow the [Agent Skills](https://agentskills.io/) format.
+
+## Available Skills
+
+### nature-polishing
+
+Polish, restructure, or translate academic prose into Nature-leaning English using writing-strategy principles, curated Nature/Nature Communications article patterns, and phrase-level support from Academic Phrasebank.
+
+**Use when:**
+- Polishing academic manuscript text
+- Translating Chinese academic text to English
+- Improving prose to Nature journal standards
+- Restructuring sentences for clarity and impact
+
+### nature-writing
+
+Draft, restructure, or plan Nature-style manuscript sections from author-provided claims, results, figures, notes, or Chinese drafts.
+
+**Use when:**
+- Writing or rebuilding abstract, introduction, results, discussion, or conclusion
+- Planning manuscript argument structure
+- Drafting sections from research notes
+
+### nature-figure
+
+Submission-grade Nature/high-impact journal figure workflow for Python or R. Create, revise, audit, or polish manuscript figures and multi-panel scientific plots.
+
+**Use when:**
+- Creating publication-quality scientific figures
+- Generating multi-panel plots for manuscripts
+- Exporting SVG/PDF/TIFF for journal submission
+- Auditing figures for Nature compliance
+
+### nature-citation
+
+Add strict Nature/CNS citations to manuscript text by searching accepted flagship and subjournal titles from Nature Portfolio, AAAS Science family, and Cell Press, with reference-manager-ready export.
+
+**Use when:**
+- Adding supporting references to manuscript
+- Searching CNS-level journal citations
+- Exporting citations for Zotero or other reference managers
+
+### nature-data
+
+Prepare, audit, or revise Nature-ready Data Availability statements, data repository plans, dataset citations, and FAIR metadata checklists.
+
+**Use when:**
+- Writing Data Availability statements
+- Planning data repository uploads
+- Checking FAIR metadata compliance
+- Preparing dataset citations
+
+### nature-reader
+
+Build full-paper Chinese-English side-by-side, figure/table-aware, source-grounded Markdown readers for journal or conference papers.
+
+**Use when:**
+- Converting papers to bilingual Markdown
+- Reading full-text papers with figure references
+- Translating papers section by section
+
+### nature-response
+
+Draft, audit, or revise point-by-point reviewer response letters for Nature-family manuscript revisions.
+
+**Use when:**
+- Writing response to reviewers
+- Preparing rebuttal letters
+- Revising manuscripts based on review comments
+
+### nature-paper2ppt
+
+Build a complete Nature-style Chinese PPTX presentation from a scientific paper, producing a real .pptx deck with Chinese slide content and speaker notes.
+
+**Use when:**
+- Converting papers to presentation slides
+- Preparing journal club or group meeting talks
+- Generating PPT from PDF or article text
+
+### nature-academic-search
+
+Multi-source literature search, citation verification, MeSH search strategy, citation file management, and reference management via MCP tools.
+
+**Use when:**
+- Searching papers across PubMed, CrossRef, arXiv
+- Verifying DOIs and citation accuracy
+- Managing bibliographies (.nbib/.ris/.bib conversion)
+- Coordinating multi-step literature workflows
+
+### scientific-toolkit-skill
+
+Research computing toolkit for MATLAB/Octave, Python scientific analysis, signal processing, image processing, statistics, simulation, optimization, and publication figures.
+
+**Use when:**
+- Running MATLAB or Python scientific computations
+- Processing signals, images, or time-series data
+- Statistical analysis and simulation
+- Generating publication figures
+
+### research-writing-skill
+
+Chinese-first research paper writing, revision, polishing, section drafting, rebuttal, peer-review response, and manuscript argument planning.
+
+**Use when:**
+- Writing research papers in Chinese
+- Drafting or revising manuscript sections
+- Preparing peer-review responses
+
+### office-academic-skill
+
+Chinese-first academic Word and PowerPoint workflow for paper reading reports, thesis PPTs, editable DOCX/PPTX generation, and layout quality checks.
+
+**Use when:**
+- Generating academic DOCX or PPTX documents
+- Creating paper reading reports
+- Building thesis defense presentations
+
+## Installation
 
 ```bash
-# 克隆仓库
-git clone https://github.com/ai-tools-mtl/academic-skills.git
-
-# 安装单个 skill
-cp -R skills/nature-polishing ~/.claude/skills/
-
-# 安装全部 skill
-cp -R skills/* ~/.claude/skills/
+npx add-skill ai-tools-mtl/academic-skills
 ```
 
-Codex 用户：
-```bash
-cp -R skills/* ~/.codex/skills/
+## Usage
+
+Skills are automatically available once installed. The agent will use them when relevant tasks are detected.
+
+**Examples:**
+```
+Polish this abstract to Nature style
+```
+```
+Create a publication-quality figure from this data
+```
+```
+Build a response letter for these reviewer comments
 ```
 
----
+## Skill Structure
 
-## Skill 索引
-
-### Nature 学术写作系列
-
-| Skill | 状态 | 说明 | 触发关键词 |
-|-------|------|------|-----------|
-| [`nature-polishing`](skills/nature-polishing/SKILL.md) | Stable | Nature 风格学术润色（含中译英） | polish, Nature style, academic writing |
-| [`nature-writing`](skills/nature-writing/SKILL.md) | Draft | Nature 风格论文章节起草与论证重构 | write abstract, write introduction, manuscript draft |
-| [`nature-figure`](skills/nature-figure/SKILL.md) | Stable | Nature 级 Python/R 科研图表生成 | Nature figure, publication plot, scientific figure |
-| [`nature-citation`](skills/nature-citation/SKILL.md) | Beta | Nature / CNS 引文检索与导出（ENW/RIS/Zotero RDF） | citation, supporting references, Zotero |
-| [`nature-data`](skills/nature-data/SKILL.md) | Draft | Data Availability 声明、仓库规划与 FAIR 检查 | Data Availability, repository, FAIR metadata |
-| [`nature-reader`](skills/nature-reader/SKILL.md) | Beta | 全文双语 Markdown 阅读器（图文对应） | nature reader, full markdown, paper md, 全文翻译 |
-| [`nature-response`](skills/nature-response/SKILL.md) | Beta | 逐条审稿意见回复信 | response to reviewers, rebuttal, 审稿意见回复 |
-| [`nature-paper2ppt`](skills/nature-paper2ppt/SKILL.md) | Beta | 论文转中文 PPT（journal club / 组会） | paper PPT, journal club, paper to slides |
-| [`nature-academic-search`](skills/nature-academic-search/SKILL.md) | Beta | 多源文献检索、引文验证与参考文献管理 | search papers, academic search, verify DOI |
-
-### 科研工具系列
-
-| Skill | 说明 | 触发关键词 |
-|-------|------|-----------|
-| [`scientific-toolkit-skill`](skills/scientific-toolkit-skill/SKILL.md) | 科研计算工具包（MATLAB/Python 科学分析/信号处理/统计分析/可视化） | MATLAB, scientific Python, data analysis, simulation |
-| [`research-writing-skill`](skills/research-writing-skill/SKILL.md) | 科研写作辅助 | research writing, manuscript |
-| [`office-academic-skill`](skills/office-academic-skill/SKILL.md) | Word/PPT 学术文档处理 | docx, pptx, office, academic document |
-
----
-
-## 仓库结构
-
-```
-academic-skills/
-├── skills/                                    # 所有 skill 的统一目录
-│   ├── nature-polishing/SKILL.md              # 学术润色
-│   ├── nature-writing/SKILL.md                # 论文写作
-│   ├── nature-figure/SKILL.md                 # 科研图表
-│   ├── nature-citation/SKILL.md               # 引文检索
-│   ├── nature-data/SKILL.md                   # 数据声明
-│   ├── nature-reader/SKILL.md                 # 全文阅读器
-│   ├── nature-response/SKILL.md               # 审稿回复
-│   ├── nature-paper2ppt/SKILL.md              # 论文转PPT
-│   ├── nature-academic-search/SKILL.md        # 文献检索
-│   ├── scientific-toolkit-skill/SKILL.md      # 科研计算工具包
-│   ├── research-writing-skill/SKILL.md        # 科研写作
-│   └── office-academic-skill/SKILL.md         # Office 文档处理
-├── package.json
-└── README.md
-```
-
----
-
-## 设计原则
-
-1. **原始来源优先**：规则基于已发表 Nature 内容或官方期刊指南
-2. **显式优于隐式**：每条规则都附有理由说明
-3. **章节感知**：学术写作和图表均需要上下文敏感性
-4. **输出优先**：每个 skill 返回可直接使用的结果
-5. **可扩展**：每个 skill 自包含在独立目录中，互不干扰
+Each skill contains:
+- `SKILL.md` - Instructions for the agent
+- `scripts/` - Helper scripts for automation (optional)
+- `references/` - Supporting documentation (optional)
 
 ## License
 
