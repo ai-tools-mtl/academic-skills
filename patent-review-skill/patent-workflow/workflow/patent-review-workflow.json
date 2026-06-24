@@ -1,0 +1,490 @@
+{
+  "workflow": {
+    "id": "patent-eligibility-review",
+    "name": "专利客体适格性审查工作流",
+    "version": "1.1.0",
+    "description": "四阶段穿透式专利客体适格性审查工作流，支持AI自动处理与人工干预节点",
+    "metadata": {
+      "created_at": "2024-01-01",
+      "updated_at": "2025-01-20",
+      "author": "Patent Review Team",
+      "tags": ["专利审查", "客体适格性", "穿透式审查"],
+      "knowledge_base": {
+        "patent_law": "knowledge/patent-law-basis.md",
+        "case_database": "knowledge/case-database.md"
+      }
+    },
+    "variables": {
+      "global": {
+        "patent_application": {
+          "type": "object",
+          "description": "专利申请文件全文",
+          "required": true
+        },
+        "claims": {
+          "type": "array",
+          "description": "权利要求列表"
+        },
+        "specification": {
+          "type": "string",
+          "description": "说明书内容"
+        },
+        "drawings": {
+          "type": "array",
+          "description": "附图描述"
+        }
+      },
+      "stage_outputs": {
+        "screening_report": {
+          "type": "object",
+          "description": "阶段一输出：客体风险筛查报告"
+        },
+        "triple_element_report": {
+          "type": "object",
+          "description": "阶段二输出：三要素实质分析报告"
+        },
+        "verification_report": {
+          "type": "object",
+          "description": "阶段三输出：锚定穿透验证报告"
+        },
+        "case_matching_result": {
+          "type": "object",
+          "description": "阶段四输出：类案匹配结果"
+        },
+        "final_opinion": {
+          "type": "object",
+          "description": "阶段四输出：审查意见通知书"
+        }
+      },
+      "decision": {
+        "risk_level": {
+          "type": "enum",
+          "values": ["低", "中", "高"],
+          "description": "风险等级"
+        },
+        "element_tech_attr": {
+          "type": "boolean",
+          "description": "三要素是否具备技术属性"
+        },
+        "anchor_result": {
+          "type": "enum",
+          "values": ["成功", "失败", "存疑"],
+          "description": "锚定验证结果"
+        },
+        "final_decision": {
+          "type": "enum",
+          "values": ["授权", "不授权", "待定"],
+          "description": "最终决定"
+        }
+      }
+    },
+    "stages": [
+      {
+        "id": "stage1",
+        "name": "初步穿透筛查",
+        "description": "快速识别高风险申请，为后续深度审查提供方向",
+        "entry_condition": {
+          "type": "always",
+          "description": "工作流入口，总是执行"
+        },
+        "exit_conditions": [
+          {
+            "condition": "risk_level == '低'",
+            "next_stage": "end",
+            "label": "低风险结案"
+          },
+          {
+            "condition": "risk_level in ['中', '高']",
+            "next_stage": "stage2",
+            "label": "进入深度审查"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "stage1_node1",
+            "name": "特征提取与标注",
+            "type": "ai_process",
+            "description": "提取权利要求1的全部技术特征，标注为技术特征/非技术特征/待定",
+            "input_variables": ["patent_application", "claims"],
+            "output_variables": ["feature_list"],
+            "prompt_ref": "node_prompts.md#1-1-特征提取与标注",
+            "next_nodes": ["stage1_node2"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 2000
+            }
+          },
+          {
+            "id": "stage1_node2",
+            "name": "名实分离风险识别",
+            "type": "ai_process",
+            "description": "分析技术特征与非技术特征的关联方式，识别名实分离风险",
+            "input_variables": ["feature_list", "claims"],
+            "output_variables": ["name_real_separation_risks"],
+            "prompt_ref": "node_prompts.md#1-2-名实分离风险识别",
+            "next_nodes": ["stage1_node3"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 2000
+            }
+          },
+          {
+            "id": "stage1_node3",
+            "name": "数据含义初判",
+            "type": "ai_process",
+            "description": "定位核心数据对象，初步判断其属于L1-L3还是L4-L5",
+            "input_variables": ["patent_application", "feature_list"],
+            "output_variables": ["data_level_initial"],
+            "prompt_ref": "node_prompts.md#1-3-数据含义初判",
+            "next_nodes": ["stage1_node4"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 1500
+            }
+          },
+          {
+            "id": "stage1_node4",
+            "name": "问题性质初判",
+            "type": "ai_process",
+            "description": "提取问题表述，与关键词库进行模式匹配",
+            "input_variables": ["patent_application"],
+            "output_variables": ["problem_nature"],
+            "prompt_ref": "node_prompts.md#1-4-问题性质初判",
+            "next_nodes": ["stage1_node5"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.2,
+              "max_tokens": 1500
+            }
+          },
+          {
+            "id": "stage1_node5",
+            "name": "风险报告生成",
+            "type": "ai_process",
+            "description": "综合以上分析，生成结构化客体风险筛查报告",
+            "input_variables": ["feature_list", "name_real_separation_risks", "data_level_initial", "problem_nature"],
+            "output_variables": ["screening_report", "risk_level"],
+            "prompt_ref": "node_prompts.md#1-5-风险报告生成",
+            "next_nodes": ["stage1_node6"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 3000
+            }
+          },
+          {
+            "id": "stage1_node6",
+            "name": "审查员复核",
+            "type": "human_review",
+            "description": "审查员复核报告，确认风险点，决定是否进入下一阶段",
+            "input_variables": ["screening_report"],
+            "output_variables": ["reviewer_decision_stage1"],
+            "required_action": {
+              "type": "approve_or_reject",
+              "options": ["通过-进入下一阶段", "通过-结案(低风险)", "驳回-补充材料", "终止-不符合条件"]
+            },
+            "next_nodes": [],
+            "condition_field": "reviewer_decision_stage1"
+          }
+        ]
+      },
+      {
+        "id": "stage2",
+        "name": "深度穿透审查",
+        "description": "针对高风险案件，深入剖析三要素的技术属性",
+        "entry_condition": {
+          "type": "variable",
+          "field": "reviewer_decision_stage1",
+          "value": "通过-进入下一阶段"
+        },
+        "exit_conditions": [
+          {
+            "condition": "element_tech_attr == false",
+            "next_stage": "end",
+            "label": "三要素任一非技术，终止"
+          },
+          {
+            "condition": "element_tech_attr == true",
+            "next_stage": "stage3",
+            "label": "进入锚定验证"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "stage2_node1",
+            "name": "技术问题穿透-删除测试",
+            "type": "ai_process",
+            "description": "执行删除测试，判断问题本质是算法/商业还是技术问题",
+            "input_variables": ["screening_report", "patent_application"],
+            "output_variables": ["deletion_test_result", "problem_essence"],
+            "prompt_ref": "node_prompts.md#2-1-技术问题穿透-删除测试",
+            "next_nodes": ["stage2_node2"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 2500
+            }
+          },
+          {
+            "id": "stage2_node2",
+            "name": "技术手段穿透-特定关联检索",
+            "type": "ai_process",
+            "description": "全量检索特定技术关联信号",
+            "input_variables": ["patent_application"],
+            "output_variables": ["tech_correlation_signals"],
+            "prompt_ref": "node_prompts.md#2-2-技术手段穿透-特定关联检索",
+            "next_nodes": ["stage2_node3"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 2500
+            }
+          },
+          {
+            "id": "stage2_node3",
+            "name": "技术效果穿透-指标匹配",
+            "type": "ai_process",
+            "description": "提取性能指标，与效果指标库进行匹配",
+            "input_variables": ["patent_application"],
+            "output_variables": ["effect_indicators", "effect_type"],
+            "prompt_ref": "node_prompts.md#2-3-技术效果穿透-指标匹配",
+            "next_nodes": ["stage2_node4"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.2,
+              "max_tokens": 2000
+            }
+          },
+          {
+            "id": "stage2_node4",
+            "name": "闭环断层检测",
+            "type": "ai_process",
+            "description": "生成三要素关联图，检测技术性断层",
+            "input_variables": ["deletion_test_result", "tech_correlation_signals", "effect_indicators"],
+            "output_variables": ["triple_element_graph", "loop_break_points"],
+            "prompt_ref": "node_prompts.md#2-4-闭环断层检测",
+            "next_nodes": ["stage2_node5"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 3000
+            }
+          },
+          {
+            "id": "stage2_node5",
+            "name": "三要素报告生成",
+            "type": "ai_process",
+            "description": "综合深度分析，生成三要素实质分析报告",
+            "input_variables": ["deletion_test_result", "tech_correlation_signals", "effect_type", "loop_break_points"],
+            "output_variables": ["triple_element_report", "element_tech_attr"],
+            "prompt_ref": "node_prompts.md#2-5-三要素报告生成",
+            "next_nodes": ["stage2_node6"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 4000
+            }
+          },
+          {
+            "id": "stage2_node6",
+            "name": "疑点确认",
+            "type": "human_review",
+            "description": "审查员对所有疑点和断层进行最终确认",
+            "input_variables": ["triple_element_report"],
+            "output_variables": ["reviewer_decision_stage2"],
+            "required_action": {
+              "type": "confirm",
+              "options": ["确认三要素具备技术属性", "确认任一要素非技术-终止", "存疑-继续分析"]
+            },
+            "next_nodes": [],
+            "condition_field": "reviewer_decision_stage2"
+          }
+        ]
+      },
+      {
+        "id": "stage3",
+        "name": "锚定穿透验证",
+        "description": "量化验证三要素与技术领域的锚定程度",
+        "entry_condition": {
+          "type": "variable",
+          "field": "reviewer_decision_stage2",
+          "value": "确认三要素具备技术属性"
+        },
+        "exit_conditions": [
+          {
+            "condition": "anchor_result == '失败'",
+            "next_stage": "end",
+            "label": "锚定失败，终止"
+          },
+          {
+            "condition": "anchor_result == '成功'",
+            "next_stage": "stage4",
+            "label": "锚定成功，进入案例匹配"
+          },
+          {
+            "condition": "anchor_result == '存疑'",
+            "next_stage": "stage3_node5",
+            "label": "需人工分析"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "stage3_node1",
+            "name": "数据含义量化",
+            "type": "ai_process",
+            "description": "精确判断数据L1-L5层次",
+            "input_variables": ["triple_element_report"],
+            "output_variables": ["data_level_quantified"],
+            "prompt_ref": "node_prompts.md#3-1-数据含义量化",
+            "next_nodes": ["stage3_node2"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.2,
+              "max_tokens": 2000
+            }
+          },
+          {
+            "id": "stage3_node2",
+            "name": "关联度量化",
+            "type": "ai_process",
+            "description": "判断算法与领域关联强度G0-G4",
+            "input_variables": ["triple_element_report", "tech_correlation_signals"],
+            "output_variables": ["domain_correlation_quantified"],
+            "prompt_ref": "node_prompts.md#3-2-关联度量化",
+            "next_nodes": ["stage3_node3"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.2,
+              "max_tokens": 2000
+            }
+          },
+          {
+            "id": "stage3_node3",
+            "name": "综合矩阵判断",
+            "type": "ai_process",
+            "description": "执行L×G组合矩阵判断",
+            "input_variables": ["data_level_quantified", "domain_correlation_quantified"],
+            "output_variables": ["matrix_result", "matrix_anchor_hint"],
+            "prompt_ref": "node_prompts.md#3-3-综合矩阵判断",
+            "next_nodes": ["stage3_node4"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.2,
+              "max_tokens": 1500
+            }
+          },
+          {
+            "id": "stage3_node4",
+            "name": "验证报告生成",
+            "type": "ai_process",
+            "description": "生成锚定穿透验证报告",
+            "input_variables": ["data_level_quantified", "domain_correlation_quantified", "matrix_result"],
+            "output_variables": ["verification_report", "anchor_result"],
+            "prompt_ref": "node_prompts.md#3-4-验证报告生成",
+            "next_nodes": ["stage3_node5"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 3000
+            }
+          },
+          {
+            "id": "stage3_node5",
+            "name": "存疑分析",
+            "type": "human_review",
+            "description": "对存疑情形进行深度分析，做出最终认定",
+            "input_variables": ["verification_report", "anchor_result"],
+            "output_variables": ["reviewer_decision_stage3"],
+            "required_action": {
+              "type": "decision",
+              "options": ["锚定成功-进入下一阶段", "锚定失败-终止"]
+            },
+            "next_nodes": [],
+            "condition_field": "reviewer_decision_stage3"
+          }
+        ]
+      },
+      {
+        "id": "stage4",
+        "name": "案例穿透与结论生成",
+        "description": "进行类案比对，形成最终审查意见",
+        "entry_condition": {
+          "type": "variable",
+          "field": "reviewer_decision_stage3",
+          "value": "锚定成功-进入下一阶段"
+        },
+        "exit_conditions": [
+          {
+            "condition": "always",
+            "next_stage": "end",
+            "label": "工作流结束"
+          }
+        ],
+        "nodes": [
+          {
+            "id": "stage4_node1",
+            "name": "类案匹配",
+            "type": "ai_process",
+            "description": "与知识库案例进行语义相似度计算",
+            "input_variables": ["triple_element_report", "verification_report"],
+            "output_variables": ["similar_cases"],
+            "prompt_ref": "node_prompts.md#4-1-类案匹配",
+            "next_nodes": ["stage4_node2"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 3000
+            }
+          },
+          {
+            "id": "stage4_node2",
+            "name": "比对分析",
+            "type": "ai_process",
+            "description": "生成五维度比对表",
+            "input_variables": ["similar_cases", "triple_element_report", "verification_report"],
+            "output_variables": ["comparison_table"],
+            "prompt_ref": "node_prompts.md#4-2-比对分析",
+            "next_nodes": ["stage4_node3"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 3000
+            }
+          },
+          {
+            "id": "stage4_node3",
+            "name": "意见生成",
+            "type": "ai_process",
+            "description": "生成格式完整的审查意见通知书初稿",
+            "input_variables": ["comparison_table", "triple_element_report", "verification_report", "similar_cases"],
+            "output_variables": ["final_opinion", "final_decision"],
+            "prompt_ref": "node_prompts.md#4-3-意见生成",
+            "next_nodes": ["stage4_node4"],
+            "config": {
+              "model": "gpt-4",
+              "temperature": 0.3,
+              "max_tokens": 5000
+            }
+          },
+          {
+            "id": "stage4_node4",
+            "name": "最终审核",
+            "type": "human_review",
+            "description": "审查员最终审核和确认通知书内容",
+            "input_variables": ["final_opinion"],
+            "output_variables": ["reviewer_final_decision"],
+            "required_action": {
+              "type": "approve_or_edit",
+              "options": ["确认发出", "修改后发出", "驳回重写"]
+            },
+            "next_nodes": [],
+            "condition_field": "reviewer_final_decision"
+          }
+        ]
+      }
+    ]
+  }
+}
